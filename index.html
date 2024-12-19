@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caterpillar Game with Difficulties</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f8ff;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #000;
+            background-color: #d4f1b4;
+        }
+        .controls {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        button {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        button:active {
+            background-color: #3e8e41;
+        }
+        .difficulty {
+            margin-top: 20px;
+        }
+        .difficulty button {
+            width: auto;
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Caterpillar Game</h1>
+    <div class="difficulty">
+        <p>Select Difficulty:</p>
+        <button id="easy">Easy</button>
+        <button id="medium">Medium</button>
+        <button id="hard">Hard</button>
+    </div>
+    <canvas id="gameCanvas" width="400" height="400" style="display: none;"></canvas>
+    <div class="controls" style="display: none;">
+        <button id="up">↑</button>
+    </div>
+    <div class="controls" style="display: none;">
+        <button id="left">←</button>
+        <button id="down">↓</button>
+        <button id="right">→</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const controls = document.querySelectorAll('.controls');
+        const difficultyButtons = document.querySelector('.difficulty');
+
+        // Game variables
+        const gridSize = 20;
+        const canvasSize = 400;
+        let caterpillar = [{ x: 100, y: 100 }];
+        let direction = { x: 0, y: 0 };
+        let food = { x: 200, y: 200 };
+        let gameSpeed = 150; // Default speed
+
+        // Draw a rectangle (caterpillar, food)
+        function drawRect(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, gridSize, gridSize);
+        }
+
+        // Generate random food position
+        function randomPosition() {
+            return {
+                x: Math.floor(Math.random() * (canvasSize / gridSize)) * gridSize,
+                y: Math.floor(Math.random() * (canvasSize / gridSize)) * gridSize,
+            };
+        }
+
+        // Main game loop
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Move the caterpillar
+            const head = {
+                x: caterpillar[0].x + direction.x * gridSize,
+                y: caterpillar[0].y + direction.y * gridSize,
+            };
+            caterpillar.unshift(head);
+
+            // Check if caterpillar eats food
+            if (head.x === food.x && head.y === food.y) {
+                food = randomPosition(); // Reposition food
+            } else {
+                caterpillar.pop(); // Remove tail segment if no food eaten
+            }
+
+            // Check for collisions (walls or self)
+            if (
+                head.x < 0 ||
+                head.x >= canvasSize ||
+                head.y < 0 ||
+                head.y >= canvasSize ||
+                caterpillar.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+            ) {
+                alert('Game Over! Refresh to play again.');
+                caterpillar = [{ x: 100, y: 100 }];
+                direction = { x: 0, y: 0 };
+                food = randomPosition();
+            }
+
+            // Draw the food
+            drawRect(food.x, food.y, 'red');
+
+            // Draw the caterpillar
+            caterpillar.forEach(segment => drawRect(segment.x, segment.y, 'green'));
+
+            setTimeout(gameLoop, gameSpeed);
+        }
+
+        // Touchscreen controls
+        document.getElementById('up').addEventListener('click', () => {
+            if (direction.y === 0) direction = { x: 0, y: -1 };
+        });
+        document.getElementById('down').addEventListener('click', () => {
+            if (direction.y === 0) direction = { x: 0, y: 1 };
+        });
+        document.getElementById('left').addEventListener('click', () => {
+            if (direction.x === 0) direction = { x: -1, y: 0 };
+        });
+        document.getElementById('right').addEventListener('click', () => {
+            if (direction.x === 0) direction = { x: 1, y: 0 };
+        });
+
+        // Start the game with selected difficulty
+        document.getElementById('easy').addEventListener('click', () => startGame(200));
+        document.getElementById('medium').addEventListener('click', () => startGame(150));
+        document.getElementById('hard').addEventListener('click', () => startGame(100));
+
+        function startGame(speed) {
+            gameSpeed = speed;
+            difficultyButtons.style.display = 'none';
+            canvas.style.display = 'block';
+            controls.forEach(control => (control.style.display = 'flex'));
+            gameLoop();
+        }
+    </script>
+</body>
+</html>
